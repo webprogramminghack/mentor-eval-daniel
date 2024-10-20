@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import styles from './TodoItem.module.scss';
 import clsx from 'clsx';
 import { todo } from '@/types/todo';
-import { deleteData, updateData } from '@/api';
 import EditModal from '../EditModal/EditModal';
 
 interface Props extends React.HTMLAttributes<HTMLParagraphElement> {
   todo: todo;
   innerRef?: React.Ref<HTMLParagraphElement>;
+  handleUpdateCompleted: (todoNow: todo, completed: boolean) => void;
+  handleUpdate: (todoNow: todo, title: string) => void;
+  handleDelete: (id: string) => void;
 }
 
 const TrashIcon = () => (
@@ -56,60 +58,34 @@ const TrashIcon = () => (
   </svg>
 );
 
-const TodoItem: React.FC<Props> = ({ todo, innerRef, ...props }) => {
+const TodoItem: React.FC<Props> = ({
+  todo,
+  innerRef,
+  handleUpdateCompleted,
+  handleUpdate,
+  handleDelete,
+  ...props
+}) => {
   //modal
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  // delete data
-  const handleDelete = async (event: React.FormEvent<HTMLFormElement>) => {
+  const onDelete = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    try {
-      await deleteData(`/todos/${todo.id}`);
-    } catch (error) {
-      console.error('Error delete todo:', error);
-    }
+    await handleDelete(todo.id);
   };
 
-  // update completed
-  const handleUpdateCheckbox = async (
+  const onUpdateCompleted = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    event.preventDefault();
-    const completed = event.target.checked;
-
-    const newTodo: todo = {
-      id: todo.id,
-      title: todo.title,
-      completed: completed,
-      date: todo.date,
-    };
-
-    try {
-      await updateData(`/todos/${todo.id}`, newTodo);
-    } catch (error) {
-      console.error('Error delete todo:', error);
-    }
+    handleUpdateCompleted(todo, event.target.checked);
   };
 
-  // update data
-  const handleUpdate = async (title: string) => {
-    const newTodo: todo = {
-      id: todo.id,
-      title: title,
-      completed: todo.completed,
-      date: todo.date,
-    };
-
-    try {
-      await updateData(`/todos/${todo.id}`, newTodo);
-      closeModal();
-    } catch (error) {
-      console.error('Error creating todo:', error);
-    }
+  const onUpdate = async (title: string) => {
+    handleUpdate(todo, title);
+    closeModal();
   };
 
   return (
@@ -124,7 +100,7 @@ const TodoItem: React.FC<Props> = ({ todo, innerRef, ...props }) => {
           <input
             type='checkbox'
             checked={todo.completed}
-            onChange={handleUpdateCheckbox}
+            onChange={onUpdateCompleted}
           />
           <div onClick={openModal}>
             {todo.completed ? (
@@ -134,7 +110,7 @@ const TodoItem: React.FC<Props> = ({ todo, innerRef, ...props }) => {
             )}
           </div>
         </div>
-        <form onSubmit={handleDelete}>
+        <form onSubmit={onDelete}>
           <button type='submit'>
             <TrashIcon />
           </button>
@@ -143,7 +119,7 @@ const TodoItem: React.FC<Props> = ({ todo, innerRef, ...props }) => {
       <EditModal
         isOpen={isModalOpen}
         onClose={closeModal}
-        onSubmit={handleUpdate}
+        onSubmit={onUpdate}
       />
     </>
   );

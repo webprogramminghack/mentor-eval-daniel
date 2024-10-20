@@ -1,13 +1,133 @@
 import { useEffect } from 'react';
 import TodoItem from './components/TodoItem/TodoItem';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { createData, fetchData } from './api';
+import { createData, deleteData, fetchData, updateData } from './api';
 import { todo, todoReq } from './types/todo';
 import { useInView } from 'react-intersection-observer';
 import { MoonLoader } from 'react-spinners';
 import InputBar from './components/InputBar/InputBar';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Todo = () => {
+  const queryClient = useQueryClient();
+
+  // create todo
+  const handleCreate = async (title: string) => {
+    const newTodo: todoReq = {
+      title: title,
+      completed: false,
+    };
+
+    try {
+      const createdTodo = await createData('/todos', newTodo);
+
+      queryClient.setQueryData(['todos'], (oldData: any) => {
+        if (!oldData || !oldData.pages) {
+          return {
+            pages: [{ todos: [createdTodo] }],
+            pageParams: [undefined],
+          };
+        }
+
+        return {
+          pages: oldData.pages.map((page: any, index: number) => {
+            if (index === 0) {
+              return {
+                ...page,
+                todos: [createdTodo, ...page.todos],
+              };
+            }
+            return page;
+          }),
+          pageParams: oldData.pageParams,
+        };
+      });
+    } catch (error) {
+      console.error('Error creating todo:', error);
+    }
+  };
+
+  // update completed
+  const handleUpdateCompleted = async (todoNow: todo, completed: boolean) => {
+    const newTodo: todo = {
+      id: todoNow.id,
+      title: todoNow.title,
+      completed: completed,
+      date: todoNow.date,
+    };
+
+    queryClient.setQueryData(['todos'], (oldData: any) => {
+      if (!oldData || !oldData.pages) return oldData;
+
+      return {
+        pages: oldData.pages.map((page: any) => ({
+          ...page,
+          todos: page.todos.map((todo: todo) =>
+            todo.id === todoNow.id ? newTodo : todo
+          ),
+        })),
+        pageParams: oldData.pageParams,
+      };
+    });
+
+    try {
+      await updateData(`/todos/${todoNow.id}`, newTodo);
+    } catch (error) {
+      console.error('Error delete todo:', error);
+    }
+  };
+
+  // update data
+  const handleUpdate = async (todoNow: todo, title: string) => {
+    const newTodo: todo = {
+      id: todoNow.id,
+      title: title,
+      completed: todoNow.completed,
+      date: todoNow.date,
+    };
+
+    queryClient.setQueryData(['todos'], (oldData: any) => {
+      if (!oldData || !oldData.pages) return oldData;
+
+      return {
+        pages: oldData.pages.map((page: any) => ({
+          ...page,
+          todos: page.todos.map((todo: todo) =>
+            todo.id === todoNow.id ? newTodo : todo
+          ),
+        })),
+        pageParams: oldData.pageParams,
+      };
+    });
+
+    try {
+      await updateData(`/todos/${todoNow.id}`, newTodo);
+    } catch (error) {
+      console.error('Error creating todo:', error);
+    }
+  };
+
+  // delete data
+  const handleDelete = async (id: string) => {
+    queryClient.setQueryData(['todos'], (oldData: any) => {
+      if (!oldData || !oldData.pages) return oldData;
+
+      return {
+        pages: oldData.pages.map((page: any) => ({
+          ...page,
+          todos: page.todos.filter((todo: todo) => todo.id !== id),
+        })),
+        pageParams: oldData.pageParams,
+      };
+    });
+
+    try {
+      await deleteData(`/todos/${id}`);
+    } catch (error) {
+      console.error('Error delete todo:', error);
+    }
+  };
+
   // get todo
   const { ref, inView } = useInView();
 
@@ -49,9 +169,26 @@ const Todo = () => {
 
     return todos.map((todo: todo, index: number) => {
       if (todos.length == index + 1) {
-        return <TodoItem innerRef={ref} key={todo.id} todo={todo} />;
+        return (
+          <TodoItem
+            innerRef={ref}
+            key={todo.id}
+            todo={todo}
+            handleDelete={handleDelete}
+            handleUpdate={handleUpdate}
+            handleUpdateCompleted={handleUpdateCompleted}
+          />
+        );
       }
-      return <TodoItem key={todo.id} todo={todo} />;
+      return (
+        <TodoItem
+          key={todo.id}
+          todo={todo}
+          handleDelete={handleDelete}
+          handleUpdate={handleUpdate}
+          handleUpdateCompleted={handleUpdateCompleted}
+        />
+      );
     });
   });
 
@@ -68,20 +205,6 @@ const Todo = () => {
   if (status === 'error') {
     return <p>Error: {error.message}</p>;
   }
-
-  // create todo
-  const handleCreate = async (title: string) => {
-    const newTodo: todoReq = {
-      title: title,
-      completed: false,
-    };
-
-    try {
-      await createData('/todos', newTodo);
-    } catch (error) {
-      console.error('Error creating todo:', error);
-    }
-  };
 
   return (
     <div className='content'>

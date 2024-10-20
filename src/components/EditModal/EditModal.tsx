@@ -1,8 +1,6 @@
 import React from 'react';
 import styles from './EditModal.module.scss';
 import clsx from 'clsx';
-import { todo } from '@/types/todo';
-import { updateData } from '@/api';
 import InputBar from '../InputBar/InputBar';
 
 interface Props {
