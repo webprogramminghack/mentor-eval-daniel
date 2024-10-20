@@ -133,7 +133,7 @@ const Todo = () => {
 
   const getData = async ({ pageParam }: { pageParam: number }) => {
     try {
-      const data = await fetchData('/todos', {
+      const data = await fetchData('/todos/scroll', {
         // completed: true,
         page: pageParam,
         limit: 20,
