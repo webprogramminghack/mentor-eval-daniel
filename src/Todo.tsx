@@ -1,13 +1,14 @@
-import React, { useEffect, CSSProperties } from 'react';
+import { useEffect } from 'react';
 import TodoItem from './components/TodoItem/TodoItem';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { fetchData } from './api';
-import { todo } from './types/todo';
+import { createData, fetchData } from './api';
+import { todo, todoReq } from './types/todo';
 import { useInView } from 'react-intersection-observer';
 import { MoonLoader } from 'react-spinners';
-import CreateTask from './components/CreateTask/CreateTask';
+import InputBar from './components/InputBar/InputBar';
 
 const Todo = () => {
+  // get todo
   const { ref, inView } = useInView();
 
   const getData = async ({ pageParam }: { pageParam: number }) => {
@@ -68,9 +69,23 @@ const Todo = () => {
     return <p>Error: {error.message}</p>;
   }
 
+  // create todo
+  const handleCreate = async (title: string) => {
+    const newTodo: todoReq = {
+      title: title,
+      completed: false,
+    };
+
+    try {
+      await createData('/todos', newTodo);
+    } catch (error) {
+      console.error('Error creating todo:', error);
+    }
+  };
+
   return (
     <div className='content'>
-      <CreateTask />
+      <InputBar type={true} onSubmit={handleCreate} />
 
       <div className='list'>{list}</div>
       {/* <button disabled={!hasNextPage} onClick={() => fetchNextPage()}>

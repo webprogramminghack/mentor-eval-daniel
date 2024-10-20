@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './TodoItem.module.scss';
 import clsx from 'clsx';
 import { todo } from '@/types/todo';
 import { deleteData, updateData } from '@/api';
+import EditModal from '../EditModal/EditModal';
 
 interface Props extends React.HTMLAttributes<HTMLParagraphElement> {
   todo: todo;
@@ -56,6 +57,13 @@ const TrashIcon = () => (
 );
 
 const TodoItem: React.FC<Props> = ({ todo, innerRef, ...props }) => {
+  //modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  // delete data
   const handleDelete = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -66,6 +74,7 @@ const TodoItem: React.FC<Props> = ({ todo, innerRef, ...props }) => {
     }
   };
 
+  // update completed
   const handleUpdateCheckbox = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -86,31 +95,57 @@ const TodoItem: React.FC<Props> = ({ todo, innerRef, ...props }) => {
     }
   };
 
+  // update data
+  const handleUpdate = async (title: string) => {
+    const newTodo: todo = {
+      id: todo.id,
+      title: title,
+      completed: todo.completed,
+      date: todo.date,
+    };
+
+    try {
+      await updateData(`/todos/${todo.id}`, newTodo);
+      closeModal();
+    } catch (error) {
+      console.error('Error creating todo:', error);
+    }
+  };
+
   return (
-    <div
-      key={todo.id}
-      ref={innerRef}
-      {...props}
-      className={clsx(styles.todoItem)}
-    >
-      <div>
-        <input
-          type='checkbox'
-          checked={todo.completed}
-          onChange={handleUpdateCheckbox}
-        />
-        {todo.completed ? (
-          <p style={{ textDecoration: 'line-through' }}>{todo.title}</p>
-        ) : (
-          <p>{todo.title}</p>
-        )}
+    <>
+      <div
+        key={todo.id}
+        ref={innerRef}
+        {...props}
+        className={clsx(styles.todoItem)}
+      >
+        <div>
+          <input
+            type='checkbox'
+            checked={todo.completed}
+            onChange={handleUpdateCheckbox}
+          />
+          <div onClick={openModal}>
+            {todo.completed ? (
+              <p style={{ textDecoration: 'line-through' }}>{todo.title}</p>
+            ) : (
+              <p>{todo.title}</p>
+            )}
+          </div>
+        </div>
+        <form onSubmit={handleDelete}>
+          <button type='submit'>
+            <TrashIcon />
+          </button>
+        </form>
       </div>
-      <form onSubmit={handleDelete}>
-        <button type='submit'>
-          <TrashIcon />
-        </button>
-      </form>
-    </div>
+      <EditModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSubmit={handleUpdate}
+      />
+    </>
   );
 };
 

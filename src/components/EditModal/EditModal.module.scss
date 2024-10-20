@@ -1,0 +1,41 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+  }
+  
+  .modalContent {
+    position: relative;
+    width: 600px;
+    background: white;
+    padding: 20px;
+    border-radius: rem-calc(20);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+
+      h2{
+        margin-bottom: 10px;
+        font-weight:bold;
+      }
+
+      .closeButton{
+        position: absolute;
+        right: 20px;
+        z-index: 1000;
+        font-weight:bold;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      button{
+        text-align: flex;
+        justify-content: center;
+      }
+  }

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Todo from './Todo';
+import EditModal from './components/EditModal/EditModal';
 
 const App: React.FC = () => {
   return (
