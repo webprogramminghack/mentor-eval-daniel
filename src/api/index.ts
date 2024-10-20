@@ -1,19 +1,6 @@
 import axios from 'axios';
 import { APIConfiguration } from '@/configs/api.config';
-
-interface Data{
-  title: string;
-  completed: boolean;
-}
-
-interface QueryParams {
-  completed?: boolean; 
-  page?: number;      
-  limit?: number;     
-  sort?: string;      
-  order?: 'asc' | 'desc'; 
-  nextCursor?: number;     
-}
+import {todo, queryParams, todoReq} from '../types/todo'
 
 
 export const customAxios = axios.create({
@@ -24,7 +11,7 @@ export const customAxios = axios.create({
   },
 });
 
-export const fetchData = async (endpoint:string, params:QueryParams) => {
+export const fetchData = async (endpoint:string, params:queryParams) => {
   try {
     const response = await customAxios.get(endpoint, {
       params:{
@@ -43,7 +30,7 @@ export const fetchData = async (endpoint:string, params:QueryParams) => {
   }
 };
 
-export const createData = async (endpoint:string, data:Data) => {
+export const createData = async (endpoint:string, data:todoReq) => {
   try {
     const response = await customAxios.post(endpoint, data);
     return response.data; 
@@ -53,7 +40,7 @@ export const createData = async (endpoint:string, data:Data) => {
   }
 };
 
-export const updateData = async (endpoint:string, data:Data) => {
+export const updateData = async (endpoint:string, data:todo) => {
   try {
     const response = await customAxios.put(endpoint, data);
     return response.data; 
